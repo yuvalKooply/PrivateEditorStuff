@@ -51,6 +51,7 @@ namespace Editor.Private
             var envToken = generalConf.SelectToken("env");
             envToken?.Replace(env);
             File.WriteAllText(generalConfPath, generalConf.ToString());
+            AssetDatabase.Refresh();
         }
     }
     

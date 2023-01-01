@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEngine;
 
 namespace Editor
 {
@@ -8,6 +9,12 @@ namespace Editor
         static Shortcuts()
         {
             
+        }
+        
+        [MenuItem("Kooply/Show Game Config Service...")]
+        public static void ShowGameConfigService()
+        {
+            Selection.activeGameObject = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Resources/ConfiguredResources/GameSpecific/GameServicesPrefabs/ConfigService.prefab");
         }
     }
 #endif

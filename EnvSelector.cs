@@ -15,20 +15,9 @@ namespace Editor.Private
         private const string ProdEnvPath = "Kooply/Environment/Prod";
     
     
-        static EnvSelector()
-        {
-            RefreshSelectedEnv();
-        }
         
         private static void RefreshSelectedEnv(string env = null)
         {
-            if (env == null)
-            {
-                var generalConfPath = "Assets/Resources/generalConfiguration-editor.json";
-                var generalConf = JObject.Parse(File.ReadAllText(generalConfPath));
-                env = generalConf.SelectToken("env")?.Value<string>();
-            }
-
             Menu.SetChecked(DevEnvPath, env == Envs.Dev);
             Menu.SetChecked(StageEnvPath, env == Envs.Stage);
             Menu.SetChecked(ProdEnvPath, env == Envs.Prod);

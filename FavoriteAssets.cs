@@ -42,7 +42,7 @@ namespace Editor.Private
 
         private Vector2 _scrollView = Vector2.zero;
 
-        [MenuItem("Window/Panels/Favorites")]
+        [MenuItem("Window/Custom Panels/Favorites")]
         public static void ShowWindow()
         {
             GetWindow<FavoriteAssets>("Favorites");

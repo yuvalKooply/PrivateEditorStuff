@@ -45,7 +45,7 @@ namespace Editor.Private
         [MenuItem("Window/Custom Panels/Favorites")]
         public static void ShowWindow()
         {
-            GetWindow<FavoriteAssets>("Favorites");
+            GetWindow<FavoriteAssets>("♥ Favorites");
         }
 
         public void OnGUI() 

@@ -144,12 +144,16 @@ namespace Editor.Private
                             }
                             else if (AssetDatabase.IsValidFolder(assetData.path))
                             {
-                                var projectTab = Type.GetType("UnityEditor.ProjectBrowser,UnityEditor");
-                                var instance = projectTab.GetField("s_LastInteractedProjectBrowser",
-                                    BindingFlags.Static | BindingFlags.Public).GetValue(null);
-                                var showDirMeth = projectTab.GetMethod("ShowFolderContents",
-                                    BindingFlags.NonPublic | BindingFlags.Instance);
-                                showDirMeth?.Invoke(instance, new object[] {asset.GetInstanceID(), true});
+                                var subfolders = AssetDatabase.GetSubFolders(assetData.path);
+                                if (subfolders.Length > 0)
+                                {
+                                    var firstSubfolder = subfolders[0];
+                                    var folderObject = AssetDatabase.LoadMainAssetAtPath(firstSubfolder);
+                                    Selection.activeObject = folderObject;
+                                    EditorGUIUtility.PingObject(folderObject);
+                                }
+                                else
+                                    AssetDatabase.OpenAsset(asset);
 
                                 ShowProjectPanel();
                             }

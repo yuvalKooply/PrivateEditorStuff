@@ -128,6 +128,14 @@ namespace Editor.Private
                             }
                         }
 
+                        if (GUILayout.Button(new GUIContent("Select"), GUILayout.ExpandWidth(false)))
+                        {
+                            var asset = AssetDatabase.LoadAssetAtPath<Object>(assetData.path);
+                            EditorGUIUtility.PingObject(asset);
+                            ShowProjectPanel();
+                            break;
+                        }
+                        
                         if (GUILayout.Button(
                                 new GUIContent(" " + assetData.name, AssetDatabase.GetCachedIcon(assetData.path)),
                                 GUILayout.Height(18)))

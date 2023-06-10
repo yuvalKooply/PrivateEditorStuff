@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using Com.Kooply.Unity.ExtensionMethods;
 using UnityEditor;
 using UnityEngine;
@@ -240,13 +239,14 @@ namespace Editor.Private
             assetData.name = asset.name;
             assetData.type = asset.GetType().ToString();
             assetsData.assets.Add(assetData);
+            SaveData();
         }
 
         private void RemovePin(AssetData assetData)
         {
             assetsData.assets.Remove(assetData);
-            SaveData();
             _focusedIndex = -1;
+            SaveData();
         }
 
         private void MoveAssetUp(int index)
@@ -256,6 +256,7 @@ namespace Editor.Private
 
             (assetsData.assets[index - 1], assetsData.assets[index]) = (assetsData.assets[index], assetsData.assets[index - 1]);
             _focusedIndex--;
+            SaveData();
         }
         
         private void MoveAssetDown(int index)
@@ -265,6 +266,7 @@ namespace Editor.Private
 
             (assetsData.assets[index + 1], assetsData.assets[index]) = (assetsData.assets[index], assetsData.assets[index + 1]);
             _focusedIndex++;
+            SaveData();
         }
 
         private void OnLostFocus()

@@ -158,6 +158,7 @@ namespace Editor.Private
                                     var folderObject = AssetDatabase.LoadMainAssetAtPath(firstSubfolder);
                                     Selection.activeObject = folderObject;
                                     EditorGUIUtility.PingObject(folderObject);
+                                    AssetDatabase.OpenAsset(asset);
                                 }
                                 else
                                     AssetDatabase.OpenAsset(asset);

@@ -75,7 +75,7 @@ namespace Editor.Private
 
         public void OnGUI() 
         {
-            if (assetsData.assets.Count > 0)
+            if (AssetsData.assets.Count > 0)
             {
                 GUILayout.BeginVertical();
 

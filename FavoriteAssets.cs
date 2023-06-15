@@ -69,7 +69,7 @@ namespace Editor.Private
         }
 
         private Vector2 _scrollView = Vector2.zero;
-        private bool _shouldShowMenu;
+        private bool _IsInEditMode;
         private int _focusedIndex = -1;
         
 
@@ -79,24 +79,27 @@ namespace Editor.Private
             {
                 GUILayout.BeginVertical();
 
-                if (!_shouldShowMenu)
+                if (!_IsInEditMode)
                 {
                     if (GUILayout.Button("Menu", EditorStyles.miniButton, GUILayout.Width(80), GUILayout.Height(20)))
-                        _shouldShowMenu = true;
+                        _IsInEditMode = true;
                 }
                 else
                 {
                     GUILayout.BeginHorizontal();
                     if (GUILayout.Button("<", EditorStyles.miniButton, GUILayout.Width(80), GUILayout.Height(20)))
-                        _shouldShowMenu = false;
-                    
+                    {
+                        _IsInEditMode = false;
+                        _focusedIndex = -1;
+                    }
+
                     var previousColor = GUI.backgroundColor;
                     GUI.backgroundColor = Color.red;
 
                     if (GUILayout.Button("Clear All", EditorStyles.miniButton, GUILayout.Width(80), GUILayout.Height(20)))
                     {
                         _focusedIndex = -1;
-                        _shouldShowMenu = false;
+                        _IsInEditMode = false;
                         assetsData.assets.Clear();
                         SaveData();
                     }
@@ -118,7 +121,7 @@ namespace Editor.Private
                     try
                     {
 
-                        if (_focusedIndex == index)
+                        if (_IsInEditMode)
                         {
                             if (GUILayout.Button(new GUIContent("X", "Remove"), GUILayout.ExpandWidth(false)))
                             {
@@ -158,7 +161,6 @@ namespace Editor.Private
                                     var folderObject = AssetDatabase.LoadMainAssetAtPath(firstSubfolder);
                                     Selection.activeObject = folderObject;
                                     EditorGUIUtility.PingObject(folderObject);
-                                    AssetDatabase.OpenAsset(asset);
                                 }
                                 else
                                     AssetDatabase.OpenAsset(asset);
@@ -167,7 +169,7 @@ namespace Editor.Private
                             }
                         }
 
-                        if (_focusedIndex == index)
+                        if (_IsInEditMode && _focusedIndex == index)
                         {
                             GUI.enabled = index > 0;
                             if (GUILayout.Button(new GUIContent("▲", "Move up"), GUILayout.ExpandWidth(false)))
@@ -187,12 +189,18 @@ namespace Editor.Private
                             GUI.enabled = true;
 
                             if (GUILayout.Button(new GUIContent("Done"), GUILayout.ExpandWidth(false)))
+                            {
                                 _focusedIndex = -1;
+                                _IsInEditMode = false;
+                            }
                         }
                         else
                         {
                             if (GUILayout.Button(new GUIContent("Edit"), GUILayout.ExpandWidth(false)))
+                            {
                                 _focusedIndex = index;
+                                _IsInEditMode = true;
+                            }
                         }
                     }
                     finally
@@ -273,7 +281,7 @@ namespace Editor.Private
         private void OnLostFocus()
         {
             _focusedIndex = -1;
-            _shouldShowMenu = false;
+            _IsInEditMode = false;
         }
     }
 }

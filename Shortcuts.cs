@@ -10,12 +10,6 @@ namespace Editor
         {
             
         }
-        
-        [MenuItem("Kooply/Config...")]
-        public static void ShowGameConfigService()
-        {
-            Selection.activeGameObject = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Resources/ConfiguredResources/GameSpecific/GameServicesPrefabs/ConfigService.prefab");
-        }
     }
 #endif
 }

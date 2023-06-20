@@ -26,7 +26,7 @@ namespace Editor.Private
         }
 
         
-        private static string SettingsFilePathKey => GetPrefix() + "settingsFilePath";
+        private static string DataFilePathKey => GetPrefix() + "dataFilePath";
         private static string DataKey => GetPrefix() + "pinned";
         
         
@@ -97,7 +97,8 @@ namespace Editor.Private
                     _focusedIndex = -1;
                 }
 
-                _useDataFile = GUILayout.Toggle(_useDataFile, "Use Data File", GUILayout.Width(100));
+                var dataFilePath = GetDataFilePath();
+                _useDataFile = GUILayout.Toggle(_useDataFile, "Use Data File" + (dataFilePath.IsNullOrEmpty() ? "" : ": " + Path.GetFileName(dataFilePath)));
 
                 if (_useDataFile)
                 {
@@ -107,9 +108,8 @@ namespace Editor.Private
                         var path = EditorUtility.SaveFilePanel("Select data file", Application.dataPath, "favAssetsSettings.json", "json");
                         if (path.Length > 0)
                         {
-                            SetSettingsFile(path);
+                            SetDataFile(path);
                             SaveData();
-                            _useDataFile = true;
                         }
                     }
                     
@@ -119,7 +119,7 @@ namespace Editor.Private
                         var path = EditorUtility.OpenFilePanel("Open data file", Application.dataPath, "json");
                         if (path.Length > 0)
                         {
-                            SetSettingsFile(path);
+                            SetDataFile(path);
                             LoadData();
                         }
                     }
@@ -259,14 +259,14 @@ namespace Editor.Private
             GUILayout.EndVertical();
         }
 
-        private void SetSettingsFile(string path)
+        private void SetDataFile(string path)
         {
-            EditorPrefs.SetString(SettingsFilePathKey, path);
+            EditorPrefs.SetString(DataFilePathKey, path);
         }
 
-        private string GetSettingsFilePath()
+        private string GetDataFilePath()
         {
-            return EditorPrefs.GetString(SettingsFilePathKey);
+            return EditorPrefs.GetString(DataFilePathKey);
         }
         
         private void SaveData()
@@ -275,7 +275,7 @@ namespace Editor.Private
 
             if (_useDataFile)
             {
-                using var writer = new StreamWriter(GetSettingsFilePath(), false);
+                using var writer = new StreamWriter(GetDataFilePath(), false);
                 writer.WriteLine(json);
             }
             else
@@ -289,7 +289,7 @@ namespace Editor.Private
             
             if (_useDataFile)
             {
-                var filePath = GetSettingsFilePath();
+                var filePath = GetDataFilePath();
                 if (File.Exists(filePath))
                     json = File.ReadAllLines(filePath).JoinStrings("\n");
                 else

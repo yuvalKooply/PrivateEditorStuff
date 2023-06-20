@@ -24,6 +24,10 @@ namespace Editor.Private
             public string name;
             public string type;
         }
+
+        
+        private static string SettingsFilePathKey => GetPrefix() + "settingsFilePath";
+        private static string DataKey => GetPrefix() + "pinned";
         
         
         
@@ -69,48 +73,84 @@ namespace Editor.Private
         }
 
         private Vector2 _scrollView = Vector2.zero;
-        private bool _IsInEditMode;
+        private bool _isInEditMode;
         private int _focusedIndex = -1;
+        private bool _useDataFile;
+        
         
 
         public void OnGUI() 
         {
-            if (AssetsData.assets.Count > 0)
+            GUILayout.BeginVertical();
+            GUILayout.BeginHorizontal();
+
+            if (!_isInEditMode)
             {
-                GUILayout.BeginVertical();
-
-                if (!_IsInEditMode)
+                if (GUILayout.Button("Menu", EditorStyles.miniButton, GUILayout.Width(80), GUILayout.Height(20)))
+                    _isInEditMode = true;
+            }
+            else
+            {
+                if (GUILayout.Button("<", EditorStyles.miniButton, GUILayout.Width(80), GUILayout.Height(20)))
                 {
-                    if (GUILayout.Button("Menu", EditorStyles.miniButton, GUILayout.Width(80), GUILayout.Height(20)))
-                        _IsInEditMode = true;
-                }
-                else
-                {
-                    GUILayout.BeginHorizontal();
-                    if (GUILayout.Button("<", EditorStyles.miniButton, GUILayout.Width(80), GUILayout.Height(20)))
-                    {
-                        _IsInEditMode = false;
-                        _focusedIndex = -1;
-                    }
-
-                    var previousColor = GUI.backgroundColor;
-                    GUI.backgroundColor = Color.red;
-
-                    if (GUILayout.Button("Clear All", EditorStyles.miniButton, GUILayout.Width(80), GUILayout.Height(20)))
-                    {
-                        _focusedIndex = -1;
-                        _IsInEditMode = false;
-                        assetsData.assets.Clear();
-                        SaveData();
-                    }
-                    
-                    GUI.backgroundColor = previousColor;
-                    
-                    GUILayout.EndHorizontal();
+                    _isInEditMode = false;
+                    _focusedIndex = -1;
                 }
 
-                GUILayout.EndVertical();
+                _useDataFile = GUILayout.Toggle(_useDataFile, "Use Data File", GUILayout.Width(100));
+
+                if (_useDataFile)
+                {
+                    if (GUILayout.Button("Create Data File", EditorStyles.miniButton, GUILayout.Width(120),
+                            GUILayout.Height(20)))
+                    {
+                        var path = EditorUtility.SaveFilePanel("Select data file", Application.dataPath, "favAssetsSettings.json", "json");
+                        if (path.Length > 0)
+                        {
+                            SetSettingsFile(path);
+                            SaveData();
+                            _useDataFile = true;
+                        }
+                    }
+                    
+                    if (GUILayout.Button("Load Data File", EditorStyles.miniButton, GUILayout.Width(100),
+                            GUILayout.Height(20)))
+                    {
+                        var path = EditorUtility.OpenFilePanel("Open data file", Application.dataPath, "json");
+                        if (path.Length > 0)
+                        {
+                            SetSettingsFile(path);
+                            LoadData();
+                        }
+                    }
+                }
+                
+                var previousColor = GUI.backgroundColor;
+                GUI.backgroundColor = Color.red;
+
+                if (GUILayout.Button("Clear All", EditorStyles.miniButton, GUILayout.Width(80), GUILayout.Height(20)))
+                {
+                    _focusedIndex = -1;
+                    _isInEditMode = false;
+                    assetsData.assets.Clear();
+                    SaveData();
+                }
+                
+                GUI.backgroundColor = previousColor;
+                
+            }
             
+            GUILayout.FlexibleSpace();
+            
+            if (GUILayout.Button("Save", EditorStyles.miniButton, GUILayout.Width(80)))
+            {
+                SaveData();
+            }
+
+            GUILayout.EndHorizontal();
+
+            if (assetsData.assets.Count > 0)
+            {
                 _scrollView = GUILayout.BeginScrollView(_scrollView);
 
                 var index = 0;
@@ -121,7 +161,7 @@ namespace Editor.Private
                     try
                     {
 
-                        if (_IsInEditMode)
+                        if (_isInEditMode)
                         {
                             if (GUILayout.Button(new GUIContent("X", "Remove"), GUILayout.ExpandWidth(false)))
                             {
@@ -137,7 +177,7 @@ namespace Editor.Private
                             ShowProjectPanel();
                             break;
                         }
-                        
+
                         if (GUILayout.Button(
                                 new GUIContent(" " + assetData.name, AssetDatabase.GetCachedIcon(assetData.path)),
                                 GUILayout.Height(18)))
@@ -169,7 +209,7 @@ namespace Editor.Private
                             }
                         }
 
-                        if (_IsInEditMode && _focusedIndex == index)
+                        if (_isInEditMode && _focusedIndex == index)
                         {
                             GUI.enabled = index > 0;
                             if (GUILayout.Button(new GUIContent("▲", "Move up"), GUILayout.ExpandWidth(false)))
@@ -191,7 +231,7 @@ namespace Editor.Private
                             if (GUILayout.Button(new GUIContent("Done"), GUILayout.ExpandWidth(false)))
                             {
                                 _focusedIndex = -1;
-                                _IsInEditMode = false;
+                                _isInEditMode = false;
                             }
                         }
                         else
@@ -199,7 +239,7 @@ namespace Editor.Private
                             if (GUILayout.Button(new GUIContent("Edit"), GUILayout.ExpandWidth(false)))
                             {
                                 _focusedIndex = index;
-                                _IsInEditMode = true;
+                                _isInEditMode = true;
                             }
                         }
                     }
@@ -215,25 +255,54 @@ namespace Editor.Private
             }
             else
                 GUILayout.Label("No Favorites (right click an asset and select ♥)");
+            
+            GUILayout.EndVertical();
         }
 
+        private void SetSettingsFile(string path)
+        {
+            EditorPrefs.SetString(SettingsFilePathKey, path);
+        }
+
+        private string GetSettingsFilePath()
+        {
+            return EditorPrefs.GetString(SettingsFilePathKey);
+        }
+        
         private void SaveData()
         {
-            var key = GetPrefix() + "pinned";
             var json = JsonUtility.ToJson(AssetsData);
-            EditorPrefs.SetString(key, json);
+
+            if (_useDataFile)
+            {
+                using var writer = new StreamWriter(GetSettingsFilePath(), false);
+                writer.WriteLine(json);
+            }
+            else
+                EditorPrefs.SetString(DataKey, json);
         }
 
         private void LoadData()
         {
             assetsData = new DataWrapper();
-
-            var key = GetPrefix() + "pinned";
-            if (EditorPrefs.HasKey(key))
+            string json = null;
+            
+            if (_useDataFile)
             {
-                var json = EditorPrefs.GetString(key);
-                assetsData = JsonUtility.FromJson<DataWrapper>(json);
+                var filePath = GetSettingsFilePath();
+                if (File.Exists(filePath))
+                    json = File.ReadAllLines(filePath).JoinStrings("\n");
+                else
+                    Debug.LogError($"{nameof(FavoriteAssets)}: Data file not found: " + filePath);
             }
+            else
+            {
+                if (EditorPrefs.HasKey(DataKey))
+                    json = EditorPrefs.GetString(DataKey);
+            }
+            
+            if (json != null)
+                assetsData = JsonUtility.FromJson<DataWrapper>(json);
         }
 
         private void PinAsset(string assetGuid)
@@ -281,7 +350,7 @@ namespace Editor.Private
         private void OnLostFocus()
         {
             _focusedIndex = -1;
-            _IsInEditMode = false;
+            _isInEditMode = false;
         }
     }
 }

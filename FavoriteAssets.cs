@@ -149,7 +149,7 @@ namespace Editor.Private
 
             GUILayout.EndHorizontal();
 
-            if (assetsData.assets.Count > 0)
+            if (assetsData?.assets != null && assetsData.assets.Count > 0)
             {
                 _scrollView = GUILayout.BeginScrollView(_scrollView);
 

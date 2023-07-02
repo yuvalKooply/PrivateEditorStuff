@@ -98,7 +98,12 @@ namespace Editor.Private
                 }
 
                 var dataFilePath = GetDataFilePath();
-                _useDataFile = GUILayout.Toggle(_useDataFile, "Use Data File" + (dataFilePath.IsNullOrEmpty() ? "" : ": " + Path.GetFileName(dataFilePath)));
+                if (GUILayout.Toggle(_useDataFile,
+                        "Use Data File" + (dataFilePath.IsNullOrEmpty() ? "" : ": " + Path.GetFileName(dataFilePath))) && _useDataFile == false)
+                {
+                    _useDataFile = true;
+                    LoadData();
+                }
 
                 if (_useDataFile)
                 {

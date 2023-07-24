@@ -217,11 +217,10 @@ namespace Editor.Private
                             }
                             else if (AssetDatabase.IsValidFolder(assetData.path))
                             {
-                                var subfolders = AssetDatabase.GetSubFolders(assetData.path);
-                                if (subfolders.Length > 0)
+                                var assetsGUIDInFolder = AssetDatabase.FindAssets("", new[] { assetData.path });
+                                if (assetsGUIDInFolder.Length > 0)
                                 {
-                                    var firstSubfolder = subfolders[0];
-                                    var folderObject = AssetDatabase.LoadMainAssetAtPath(firstSubfolder);
+                                    var folderObject = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(assetsGUIDInFolder[0]));
                                     Selection.activeObject = folderObject;
                                     EditorGUIUtility.PingObject(folderObject);
                                 }

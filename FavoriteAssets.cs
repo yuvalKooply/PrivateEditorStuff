@@ -22,7 +22,6 @@ namespace Editor.Private
             public string guid;
             public string path;
             public string name;
-            public string type;
         }
 
         
@@ -76,8 +75,11 @@ namespace Editor.Private
         private bool _isInEditMode;
         private int _focusedIndex = -1;
         private bool _useDataFile;
-        
-        
+
+        private void Awake()
+        {
+            RefreshAssets();
+        }
 
         public void OnGUI() 
         {
@@ -151,6 +153,11 @@ namespace Editor.Private
             
             GUILayout.FlexibleSpace();
             
+            if (GUILayout.Button("Refresh", EditorStyles.miniButton, GUILayout.Width(80)))
+            {
+                RefreshAssets();
+            }
+            
             if (GUILayout.Button("Save", EditorStyles.miniButton, GUILayout.Width(80)))
             {
                 SaveData();
@@ -158,6 +165,7 @@ namespace Editor.Private
 
             GUILayout.EndHorizontal();
 
+            var refreshWhenDone = false;
             if (assetsData?.assets != null && assetsData.assets.Count > 0)
             {
                 _scrollView = GUILayout.BeginScrollView(_scrollView);
@@ -192,6 +200,12 @@ namespace Editor.Private
                                 GUILayout.Height(18)))
                         {
                             var asset = AssetDatabase.LoadAssetAtPath<Object>(assetData.path);
+                            if (asset == null)
+                            {
+                                refreshWhenDone = true;
+                                continue;
+                            }
+
                             EditorGUIUtility.PingObject(asset);
                             Selection.activeObject = asset;
 
@@ -266,6 +280,9 @@ namespace Editor.Private
                 GUILayout.Label("No Favorites (right click an asset and select ♥)");
             
             GUILayout.EndVertical();
+
+            if (refreshWhenDone)
+                RefreshAssets();
         }
 
         private void SetDataFile(string path)
@@ -276,6 +293,20 @@ namespace Editor.Private
         private string GetDataFilePath()
         {
             return EditorPrefs.GetString(DataFilePathKey);
+        }
+
+        private void RefreshAssets()
+        {
+            for (var i = assetsData.assets.Count - 1; i >= 0; i--)
+            {
+                var assetData = assetsData.assets[i];
+                assetData.path = AssetDatabase.GUIDToAssetPath(assetData.guid);
+                var asset = AssetDatabase.LoadAssetAtPath<Object>(assetData.path);
+                if (asset != null)
+                    assetData.name = asset.name;
+                else
+                    assetsData.assets.RemoveAt(i);
+            }
         }
         
         private void SaveData()
@@ -324,7 +355,6 @@ namespace Editor.Private
                     
             var asset = AssetDatabase.LoadAssetAtPath<Object>(assetData.path);
             assetData.name = asset.name;
-            assetData.type = asset.GetType().ToString();
             assetsData.assets.Add(assetData);
             SaveData();
         }

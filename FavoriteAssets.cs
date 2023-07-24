@@ -88,7 +88,7 @@ namespace Editor.Private
 
             if (!_isInEditMode)
             {
-                if (GUILayout.Button("Menu", EditorStyles.miniButton, GUILayout.Width(80), GUILayout.Height(20)))
+                if (GUILayout.Button("Menu"))
                     _isInEditMode = true;
             }
             else
@@ -113,8 +113,7 @@ namespace Editor.Private
 
                 if (_useDataFile)
                 {
-                    if (GUILayout.Button("Create Data File", EditorStyles.miniButton, GUILayout.Width(120),
-                            GUILayout.Height(20)))
+                    if (GUILayout.Button("Create Data File", EditorStyles.miniButton))
                     {
                         var path = EditorUtility.SaveFilePanel("Select data file", Application.dataPath, "favAssetsSettings.json", "json");
                         if (path.Length > 0)
@@ -124,8 +123,7 @@ namespace Editor.Private
                         }
                     }
                     
-                    if (GUILayout.Button("Load Data File", EditorStyles.miniButton, GUILayout.Width(100),
-                            GUILayout.Height(20)))
+                    if (GUILayout.Button("Load Data File", EditorStyles.miniButton))
                     {
                         var path = EditorUtility.OpenFilePanel("Open data file", Application.dataPath, "json");
                         if (path.Length > 0)
@@ -139,7 +137,7 @@ namespace Editor.Private
                 var previousColor = GUI.backgroundColor;
                 GUI.backgroundColor = Color.red;
 
-                if (GUILayout.Button("Clear All", EditorStyles.miniButton, GUILayout.Width(80), GUILayout.Height(20)))
+                if (GUILayout.Button("Clear All", EditorStyles.miniButton))
                 {
                     _focusedIndex = -1;
                     _isInEditMode = false;
@@ -153,12 +151,12 @@ namespace Editor.Private
             
             GUILayout.FlexibleSpace();
             
-            if (GUILayout.Button("Refresh", EditorStyles.miniButton, GUILayout.Width(80)))
+            if (GUILayout.Button("Refresh"))
             {
                 RefreshAssets();
             }
             
-            if (GUILayout.Button("Save", EditorStyles.miniButton, GUILayout.Width(80)))
+            if (GUILayout.Button("Save"))
             {
                 SaveData();
             }

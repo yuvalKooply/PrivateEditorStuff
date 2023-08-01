@@ -84,7 +84,7 @@ public class EDMPromptDisabler : MonoBehaviour
 
     private static async void DisableEDMPromptAfterDelay()
     {
-        await UniTask.Delay(3000);
+        await UniTask.Delay(2000);
         CloseAndDisableEDMPrompt();
     }
     

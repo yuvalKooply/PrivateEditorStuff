@@ -10,6 +10,17 @@ namespace Editor
         {
             
         }
+
+        [MenuItem("Window/Toggle Simulator")]
+        public static void ToggleSimulator()
+        {
+            var editorWindow = Resources.FindObjectsOfTypeAll<EditorWindow>();
+            foreach (var window in editorWindow)
+            {
+                if (window.titleContent.text.StartsWith("Simulator"))
+                    window.maximized = !window.maximized;
+            }
+        }
     }
 #endif
 }

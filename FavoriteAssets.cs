@@ -90,6 +90,9 @@ namespace Editor.Private
             {
                 if (GUILayout.Button("Menu"))
                     _isInEditMode = true;
+
+                if (_useDataFile)
+                    GUILayout.Label("Using data file");
             }
             else
             {
@@ -100,7 +103,7 @@ namespace Editor.Private
                 }
 
                 var dataFilePath = GetDataFilePath();
-                if (GUILayout.Toggle(_useDataFile, "Use Data File" + (dataFilePath.IsNullOrEmpty() ? "" : ": " + Path.GetFileName(dataFilePath))))
+                if (GUILayout.Toggle(_useDataFile, "Use data file" + (dataFilePath.IsNullOrEmpty() ? "" : ": " + Path.GetFileName(dataFilePath))))
                 {
                     if (_useDataFile == false)
                     {
@@ -139,8 +142,6 @@ namespace Editor.Private
 
                 if (GUILayout.Button("Clear All", EditorStyles.miniButton))
                 {
-                    _focusedIndex = -1;
-                    _isInEditMode = false;
                     assetsData.assets.Clear();
                     SaveData();
                 }

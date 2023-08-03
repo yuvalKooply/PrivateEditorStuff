@@ -60,6 +60,15 @@ namespace Editor.Private
         
         [SerializeField]
         private DataWrapper assetsData;
+        
+
+        private Vector2 _scrollView = Vector2.zero;
+        private bool _isInEditMode;
+        private int _focusedIndex = -1;
+        private bool _useDataFile;
+        private List<AssetData> _noDataFileAssets;
+
+            
         private DataWrapper AssetsData
         {
             get
@@ -70,12 +79,7 @@ namespace Editor.Private
                 return assetsData;
             }
         }
-
-        private Vector2 _scrollView = Vector2.zero;
-        private bool _isInEditMode;
-        private int _focusedIndex = -1;
-        private bool _useDataFile;
-
+            
         private void Awake()
         {
             RefreshAssets();
@@ -107,33 +111,43 @@ namespace Editor.Private
                 {
                     if (_useDataFile == false)
                     {
+                        _noDataFileAssets = assetsData.assets;
                         _useDataFile = true;
                         LoadData();
                     }
                 }
                 else
-                    _useDataFile = false;
-
-                if (_useDataFile)
                 {
-                    if (GUILayout.Button("Create Data File", EditorStyles.miniButton))
-                    {
-                        var path = EditorUtility.SaveFilePanel("Select data file", Application.dataPath, "favAssetsSettings.json", "json");
-                        if (path.Length > 0)
-                        {
-                            SetDataFile(path);
-                            SaveData();
-                        }
-                    }
+                    _useDataFile = false;
                     
-                    if (GUILayout.Button("Load Data File", EditorStyles.miniButton))
+                    if (!_noDataFileAssets.IsNullOrEmpty())
                     {
-                        var path = EditorUtility.OpenFilePanel("Open data file", Application.dataPath, "json");
-                        if (path.Length > 0)
-                        {
-                            SetDataFile(path);
-                            LoadData();
-                        }
+                        assetsData.assets = _noDataFileAssets;
+                        LoadData();
+                    }
+                }
+
+                if (GUILayout.Button("Create Data File", EditorStyles.miniButton))
+                {
+                    var path = EditorUtility.SaveFilePanel("Select data file", Application.dataPath, "favAssetsSettings.json", "json");
+                    if (path.Length > 0)
+                    {
+                        SetDataFile(path);
+                        _useDataFile = true;
+                        SaveData();
+                    }
+                    else
+                        Debug.LogError("Favorite Assets: Invalid data file path: " + path);
+                }
+                
+                if (GUILayout.Button("Load Data File", EditorStyles.miniButton))
+                {
+                    var path = EditorUtility.OpenFilePanel("Open data file", Application.dataPath, "json");
+                    if (path.Length > 0)
+                    {
+                        SetDataFile(path);
+                        _useDataFile = true;
+                        LoadData();
                     }
                 }
                 
@@ -295,6 +309,8 @@ namespace Editor.Private
 
         private void RefreshAssets()
         {
+            _noDataFileAssets = null;
+            
             for (var i = assetsData.assets.Count - 1; i >= 0; i--)
             {
                 var assetData = assetsData.assets[i];

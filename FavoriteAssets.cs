@@ -82,6 +82,13 @@ namespace Editor.Private
             
         private void Awake()
         {
+            var dataFilePath = GetDataFilePath();
+            if (!dataFilePath.IsNullOrEmpty())
+            {
+                _useDataFile = true;
+                LoadData();
+            }
+
             RefreshAssets();
         }
 

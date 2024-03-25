@@ -1,7 +1,6 @@
 
 using System.IO;
 using Com.Kooply.Unity;
-using Com.Kooply.Unity.Services;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 
@@ -12,7 +11,6 @@ namespace Editor.Private
     public static class EnvSelector
     {
         private const string DevEnvPath = "Kooply/Environment/Dev";
-        private const string StageEnvPath = "Kooply/Environment/Stage";
         private const string ProdEnvPath = "Kooply/Environment/Prod";
     
     
@@ -20,7 +18,6 @@ namespace Editor.Private
         private static void RefreshSelectedEnv(string env = null)
         {
             Menu.SetChecked(DevEnvPath, env == Envs.Dev);
-            Menu.SetChecked(StageEnvPath, env == Envs.Stage);
             Menu.SetChecked(ProdEnvPath, env == Envs.Prod);
         }
         
@@ -31,13 +28,6 @@ namespace Editor.Private
             RefreshSelectedEnv(Envs.Dev);
         }
   
-        [MenuItem(StageEnvPath)]
-        public static void SetEnvStage()
-        {
-            SetEnv(Envs.Stage);
-            RefreshSelectedEnv(Envs.Stage);
-        }
-        
         [MenuItem(ProdEnvPath)]
         public static void SetEnvProd()
         {

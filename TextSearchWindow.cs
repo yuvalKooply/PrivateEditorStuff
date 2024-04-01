@@ -1,3 +1,4 @@
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -6,6 +7,7 @@ namespace Editor.Private
     public class TextSearchWindow : EditorWindow
     {
         private string _searchText = string.Empty;
+        private bool _foundOccurrence = false;
 
         [MenuItem("Tools/Text Search")]
         public static void ShowWindow()
@@ -19,43 +21,76 @@ namespace Editor.Private
             _searchText = EditorGUILayout.TextField("Search Term", _searchText);
 
             if (GUILayout.Button("Search") && !string.IsNullOrWhiteSpace(_searchText))
-                SearchForTextInAllComponents();
+            {
+                SearchInAllAssets();
+                if (!_foundOccurrence)
+                {
+                    // If after searching, no occurrence is found, log a message
+                    Debug.LogError($"No occurrences of '{_searchText}' found in any project assets.");
+                }
+            }
         }
 
-        private void SearchForTextInAllComponents()
+        private void SearchInAllAssets()
         {
-            var found = false;
-            var allAssetPaths = AssetDatabase.GetAllAssetPaths();
-
-            foreach (var assetPath in allAssetPaths)
+            var allAssetGUIDs = AssetDatabase.FindAssets("");
+            foreach (var guid in allAssetGUIDs)
             {
-                if (assetPath.EndsWith(".prefab") || assetPath.EndsWith(".asset"))
-                {
-                    var asset = AssetDatabase.LoadAssetAtPath<Object>(assetPath);
-                    if (asset != null)
-                    {
-                        var serializedObject = new SerializedObject(asset);
-                        var prop = serializedObject.GetIterator();
+                var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                var asset = AssetDatabase.LoadAssetAtPath<Object>(assetPath);
 
-                        while (prop.NextVisible(true))
+                switch (asset)
+                {
+                    case GameObject gameObject: CheckGameObject(gameObject, assetPath);
+                        break;
+                    case ScriptableObject scriptableObject: CheckScriptableObject(scriptableObject, assetPath);
+                        break;
+                }
+            }
+        }
+
+        private void CheckGameObject(GameObject obj, string assetPath)
+        {
+            CheckComponentsInChildren(obj, assetPath);
+        }
+
+        private void CheckComponentsInChildren(GameObject obj, string assetPath)
+        {
+            var components = obj.GetComponentsInChildren<Component>(true);
+            foreach (var component in components)
+            {
+                if (component == null) continue; // Handle missing (broken) components gracefully
+
+                var fields = component.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                foreach (var field in fields)
+                {
+                    if (field.FieldType == typeof(string))
+                    {
+                        var value = field.GetValue(component) as string;
+                        if (!string.IsNullOrEmpty(value) && value.Contains(_searchText))
                         {
-                            if (prop.propertyType == SerializedPropertyType.String)
-                            {
-                                if (prop.stringValue.Contains(_searchText))
-                                {
-                                    Debug.LogError($"Found '{_searchText}' in {assetPath}", asset);
-                                    found = true;
-                                    Selection.activeGameObject = asset as GameObject;
-                                }
-                            }
+                            Debug.LogError($"Found '{_searchText}' in {field.Name} of {component.GetType().Name} on {obj.name} in asset {assetPath}", obj);
+                            _foundOccurrence = true;
                         }
                     }
                 }
             }
+        }
 
-            if (!found)
+        private void CheckScriptableObject(ScriptableObject obj, string assetPath)
+        {
+            var fields = obj.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (var field in fields)
             {
-                Debug.LogError($"Text Search: No results found for '{_searchText}'.");
+                if (field.FieldType == typeof(string))
+                {
+                    var value = field.GetValue(obj) as string;
+                    if (!string.IsNullOrEmpty(value) && value.Contains(_searchText))
+                    {
+                        Debug.LogError($"Found '{_searchText}' in {field.Name} of {obj.GetType().Name} in asset {assetPath}", obj);
+                        _foundOccurrence = true;
+                    }
+                }
             }
         }
     }

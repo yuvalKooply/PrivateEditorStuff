@@ -1,3 +1,4 @@
+using Com.Kooply.Unity.Services;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,6 +21,12 @@ namespace Editor
                 if (window.titleContent.text.StartsWith("Simulator"))
                     window.maximized = !window.maximized;
             }
+        }
+        
+        [MenuItem("Kooply/Toggle Screenshot Mode")]
+        public static void ToggleScreenshotMode()
+        {
+            KCoreServices.Admin.ScreenshotModeState.Value = !KCoreServices.Admin.ScreenshotModeState;
         }
     }
 #endif

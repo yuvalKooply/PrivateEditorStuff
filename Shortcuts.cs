@@ -1,4 +1,5 @@
 using Com.Kooply.Unity.Services;
+using Com.Kooply.Unity.Utils;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,7 +10,7 @@ namespace Editor
     {
         static Shortcuts()
         {
-            
+            Keys.Register("admin_text", KeyCode.Q, KeyCode.LeftShift, () => KCoreServices.Admin.ToggleAdminDebugText());
         }
 
         [MenuItem("Window/Toggle Simulator")]

@@ -8,7 +8,8 @@ namespace Editor
 #if UNITY_EDITOR
     public static class Shortcuts
     {
-        static Shortcuts()
+        [MenuItem("Kooply/ToggleAdminDebugText")]
+        public static void ToggleAdminDebugText()
         {
             Keys.Register("admin_text", KeyCode.Q, KeyCode.LeftShift, () => KCoreServices.Admin.ToggleAdminDebugText());
         }

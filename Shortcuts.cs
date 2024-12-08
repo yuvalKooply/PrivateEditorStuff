@@ -8,6 +8,13 @@ namespace Editor
 #if UNITY_EDITOR
     public static class Shortcuts
     {
+        [MenuItem("Tools/Config")]
+        public static void ShowConfig()
+        {
+            var path = Application.productName == "Sugar Rush" ? "Assets/Scripts/_INFRA_SPECIFICS/Config.Active.cs" : "Assets/KooplyRun/Scripts/Configuration/ActiveTestsConfig.cs";
+            AssetDatabase.OpenAsset(AssetDatabase.LoadAssetAtPath<MonoScript>(path));
+        }
+
         [MenuItem("Kooply/ToggleAdminDebugText")]
         public static void ToggleAdminDebugText()
         {

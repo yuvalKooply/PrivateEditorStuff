@@ -1,5 +1,4 @@
 using Com.Kooply.Unity.Services;
-using Com.Kooply.Unity.Utils;
 using UnityEditor;
 using UnityEngine;
 
@@ -15,10 +14,10 @@ namespace Editor
             AssetDatabase.OpenAsset(AssetDatabase.LoadAssetAtPath<MonoScript>(path));
         }
 
-        [MenuItem("Kooply/ToggleAdminDebugText")]
+        [MenuItem("Kooply/Toggle Admin Debug Text")]
         public static void ToggleAdminDebugText()
         {
-            Keys.Register("admin_text", KeyCode.Q, KeyCode.LeftShift, () => KCoreServices.Admin.ToggleAdminDebugText());
+            KCoreServices.Admin.ToggleAdminDebugText();
         }
 
         [MenuItem("Window/Toggle Simulator")]

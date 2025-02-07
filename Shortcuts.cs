@@ -30,12 +30,6 @@ namespace Editor
                     window.maximized = !window.maximized;
             }
         }
-        
-        [MenuItem("Kooply/Toggle Screenshot Mode")]
-        public static void ToggleScreenshotMode()
-        {
-            KCoreServices.Admin.ScreenshotModeState.Value = !KCoreServices.Admin.ScreenshotModeState;
-        }
     }
 #endif
 }

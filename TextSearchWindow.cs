@@ -1,13 +1,19 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
+using Com.Kooply.Unity.ExtensionMethods;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Editor.Private
 {
     public class TextSearchWindow : EditorWindow
     {
         private string _searchText = string.Empty;
-        private bool _foundOccurrence = false;
+        private bool _foundOccurrence;
+        private bool _ignoreCase;
 
         [MenuItem("Tools/Text Search")]
         public static void ShowWindow()
@@ -22,6 +28,7 @@ namespace Editor.Private
 
             if (GUILayout.Button("Search") && !string.IsNullOrWhiteSpace(_searchText))
             {
+                _foundOccurrence = false;
                 SearchInAllAssets();
                 if (!_foundOccurrence)
                 {
@@ -29,6 +36,8 @@ namespace Editor.Private
                     Debug.LogError($"No occurrences of '{_searchText}' found in any project assets.");
                 }
             }
+
+            _ignoreCase = GUILayout.Toggle(_ignoreCase, "Ignore Case", GUILayout.Width(100));
         }
 
         private void SearchInAllAssets()
@@ -39,57 +48,115 @@ namespace Editor.Private
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
                 var asset = AssetDatabase.LoadAssetAtPath<Object>(assetPath);
 
+                if (asset == null)
+                    continue;
+                
                 switch (asset)
                 {
-                    case GameObject gameObject: CheckGameObject(gameObject, assetPath);
+                    case GameObject gameObject:
+                        SearchPrefabForText(gameObject, assetPath);
                         break;
-                    case ScriptableObject scriptableObject: CheckScriptableObject(scriptableObject, assetPath);
+                    case ScriptableObject scriptableObject:
+                        SearchScriptableObjectForText(scriptableObject, assetPath);
                         break;
                 }
             }
         }
 
-        private void CheckGameObject(GameObject obj, string assetPath)
+        private void SearchPrefabForText(GameObject prefab, string assetPath)
         {
-            CheckComponentsInChildren(obj, assetPath);
-        }
+            if (_ignoreCase)
+                _searchText = _searchText.ToLower();
 
-        private void CheckComponentsInChildren(GameObject obj, string assetPath)
-        {
-            var components = obj.GetComponentsInChildren<Component>(true);
+            var visitedObjects = new HashSet<object>();
+            var components = prefab.GetComponentsInChildren<MonoBehaviour>(true);
+
             foreach (var component in components)
             {
-                if (component == null) continue; // Handle missing (broken) components gracefully
-
-                var fields = component.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                foreach (var field in fields)
+                try
                 {
-                    if (field.FieldType == typeof(string))
-                    {
-                        var value = field.GetValue(component) as string;
-                        if (!string.IsNullOrEmpty(value) && value.Contains(_searchText))
-                        {
-                            Debug.LogError($"Found '{_searchText}' in {field.Name} of {component.GetType().Name} on {obj.name} in asset {assetPath}", obj);
-                            _foundOccurrence = true;
-                        }
-                    }
+                    if (component == null)
+                        continue;
+
+                    SearchObjectFields(component, component.gameObject, assetPath, visitedObjects);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(
+                        $"Error during string search in prefab: '{prefab.name}' and game object: '{component.gameObject.name}'! Exception: {e}");
                 }
             }
         }
-
-        private void CheckScriptableObject(ScriptableObject obj, string assetPath)
+        
+        private void SearchScriptableObjectForText(ScriptableObject scriptableObject, string assetPath)
         {
-            var fields = obj.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            if (_ignoreCase)
+                _searchText = _searchText.ToLower();
+
+            var visitedObjects = new HashSet<object>();
+            SearchObjectFields(scriptableObject, null, assetPath, visitedObjects);
+        }
+
+        private void SearchObjectFields(object obj, GameObject gameObject, string assetPath, HashSet<object> visitedObjects)
+        {
+            try
+            {
+                if (obj == null || !visitedObjects.Add(obj))
+                    return;
+            }
+            catch (Exception)
+            {
+                // obj is probably null 
+                return;
+            }
+
+            var type = obj.GetType();
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            
             foreach (var field in fields)
             {
-                if (field.FieldType == typeof(string))
+                if (field == null || typeof(Object).IsAssignableFrom(field.FieldType))
+                    continue;
+                
+                try
                 {
-                    var value = field.GetValue(obj) as string;
-                    if (!string.IsNullOrEmpty(value) && value.Contains(_searchText))
+                    var fieldValue = field.GetValue(obj);
+                    if (fieldValue == null)
+                        continue;
+
+                    if (field.FieldType == typeof(string))
                     {
-                        Debug.LogError($"Found '{_searchText}' in {field.Name} of {obj.GetType().Name} in asset {assetPath}", obj);
-                        _foundOccurrence = true;
+                        var stringValue = fieldValue as string;
+                        if (!stringValue.IsNullOrEmpty())
+                        {
+                            if (_ignoreCase)
+                                stringValue = stringValue.ToLower();
+
+                            if (stringValue.Contains(_searchText))
+                            {
+                                Debug.LogError($"Found '{_searchText}' in {field.Name} of {type.Name} in asset {assetPath}");
+                                _foundOccurrence = true;
+                            }
+                        }
                     }
+                    else if (typeof(IEnumerable).IsAssignableFrom(field.FieldType) && field.FieldType != typeof(string))
+                    {
+                        if (fieldValue is IEnumerable enumerable)
+                            foreach (var item in enumerable)
+                                SearchObjectFields(item, gameObject, assetPath, visitedObjects);
+                    }
+                    else if (field.FieldType.IsClass || (field.FieldType.IsValueType && !field.FieldType.IsPrimitive))
+                    {
+                        if (fieldValue != null)
+                            SearchObjectFields(fieldValue, gameObject, assetPath, visitedObjects);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"Error during string search in asset '{assetPath}': {e}");
+                    
+                    if (gameObject != null && field != null)
+                        Debug.LogError($"game object: '{gameObject.name}' and field: '{field.Name}'!");
                 }
             }
         }
